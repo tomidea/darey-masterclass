@@ -25,6 +25,17 @@ Typical Release process
    7. Are there parts of the system throwing errors which is not visible to the frontend?
 7. Improvements to the software - new releases...new updates..new versions (1.0.0)..start the cycle again (1.0.1).....(1.1.4).....(2.0.0)
 
+Semantic Versioning (SemVer)
+
+1.0.0
+1.0.7 (Bug Fix or Patch release) Patch
+
+1.1.7 (Feature release) Minor 
+
+2.0.0 . (Major release)
+
+
+
 Problems with traditional approach
 
 1. Slow - small releases can take weeks, major releases can take months
@@ -60,7 +71,7 @@ When something terrible happens to the infrastructure running the software, it i
 
 
 
-DevOps to the rescue - Quickly deliver HIGH QUALITY code by removing all the blockers that causes slow donw to the release process.
+DevOps to the rescue - Quickly deliver HIGH QUALITY code by removing all the blockers that causes slow down to the release process.
 
 1. Fast - new patch releases can get to users in minutes, major releases can get to users in hours/few days
 2. Improved communication betwwen developers and operators
@@ -73,7 +84,7 @@ DevOps to the rescue - Quickly deliver HIGH QUALITY code by removing all the blo
    5. Penetration testing
    6. End to End testing
 5. More secured application/infrastructure since DevOps also strongly considers security in the process - DevSecOps
-6. Because both apps and infrastructure is automated, it is easy to replicate the entire stack to the exact state it was before it got destroyed, and the software cna be back in business in just minutes. You dont have to remember any documentations, or follow checklists in whatever order. Simply executing DevOps code solves this problem.
+6. Because both apps and infrastructure is automated, it is easy to replicate the entire stack to the exact state it was before it got destroyed, and the software can be back in business in just minutes. You dont have to remember any documentations, or follow checklists in whatever order. Simply executing DevOps code solves this problem.
 7. Much more happier customers.
 8. Much quicker feedback for further improvements
 
@@ -87,12 +98,13 @@ Therefore, DevOps is when cultural philosophies, practices and tools are combine
 Categories/Examples
 
 1. Planning and collaboration
-   1. Jira
+   1. Jira / Atlassian
    2. Azure DevOps
    3. Monday.com
 2. Source Code Management
    1. Git
    2. SVN
+   3. Github/Gitlab
 3. Continous Integration/Delivery
    1. Jenkins
    2. Gitlab CI
