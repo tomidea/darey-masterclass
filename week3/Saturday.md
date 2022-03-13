@@ -16,8 +16,10 @@ Implementation guide
 13. Create security group and allow the ALB to talk to the Nginx proxy server.
 14. Create an External facing Application Load Balancer (ALB)
 15. Create a Listener (port 80) and target group
-16. Create a Launch Template for nginx 
+16. Create a Launch Template for nginx (Use a redhat based AMI)
 17. Create ASG for nginx
+
+
 18. Create a Launch Template for Bastion 
 19. Create ASG for Bastion
 20. Connect to Bastion server launched in the Public Subnet
