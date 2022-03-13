@@ -46,4 +46,11 @@ sudo systemctl restart nginx
 
 
 Annex
-ssh-add --apple-use-keychain ~/.ssh/devops.cer35.177.96.172
+
+ssh-agent
+
+Mac OS
+ssh-add --apple-use-keychain ~/.ssh/devops.cer
+
+Windows
+ssh-add ~/.ssh/devops.cer
