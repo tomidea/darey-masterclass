@@ -35,12 +35,28 @@ sudo systemctl restart nginx
 20. Ensure that the nginx Target group is healthy
     1.  Check the security of the instance and ensure it allows port 80
 21. Create Route53 entry. Point the DNS to the ALB
+
+
+
+
 22. Create security group for internal ALB. (Alow traffic from Nginx proxy)
 23. Create Security group for Wordpress site (Allow traffic from internal ALB)
 24. Create Security group for Tooling site (Allow traffic from internal ALB)
 25. Create target group for Wordpress site
 26. Create target group for tooling site
 27. Create internal ALB and configure listeners with Host header rules for both wordpress and tooling sites
+28. Create Launch Template for Tooling ASG
+29. Create Launch Template for Wordpress ASG
+30. Create ASG for Tooling instances
+31. Create ASG for Wordpress instances
+32. Create Security Group for RDS
+33. Create the KMS key for RDS data encryption
+34. Create DB subnet group
+35. Create RDS/Aurora Database
+
+
+
+
 
 
 
@@ -54,3 +70,37 @@ ssh-add --apple-use-keychain ~/.ssh/devops.cer
 
 Windows
 ssh-add ~/.ssh/devops.cer
+
+
+
+Tooling Script
+
+#!/bin/bash
+
+# tooling userdata 
+
+sudo yum update -y
+sudo yum install -y mysql git wget
+sudo yum install -y https://dl.fedoraproject.org/pub/epel/epel-release-latest-8.noarch.rpm
+sudo yum install -y dnf-utils http://rpms.remirepo.net/enterprise/remi-release-8.rpm
+
+# this section is to install EFS util for mounting to the file system
+
+git clone https://github.com/aws/efs-utils
+cd efs-utils
+sudo yum install -y make rpm-build
+
+make rpm 
+sudo yum install -y  ./build/amazon-efs-utils*rpm
+
+install botocore - https://docs.aws.amazon.com/efs/latest/ug/install-botocore.html
+
+Configure Instance profile
+
+mount -t efs -o tls,accesspoint=fsap-01c13a4019ca59dbe fs-8b501d3f:/ /var/www/
+
+
+
+
+
+
