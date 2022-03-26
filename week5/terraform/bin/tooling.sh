@@ -1,11 +1,9 @@
 #!/bin/bash
 
-# tooling userdata 
-
-sudo yum update -y
-sudo yum install -y mysql git wget
-sudo yum install -y https://dl.fedoraproject.org/pub/epel/epel-release-latest-8.noarch.rpm
-sudo yum install -y dnf-utils http://rpms.remirepo.net/enterprise/remi-release-8.rpm
+yum update -y
+yum install -y mysql git wget
+yum install -y https://dl.fedoraproject.org/pub/epel/epel-release-latest-8.noarch.rpm
+yum install -y dnf-utils http://rpms.remirepo.net/enterprise/remi-release-8.rpm
 
 # this section is to install EFS util for mounting to the file system
 
