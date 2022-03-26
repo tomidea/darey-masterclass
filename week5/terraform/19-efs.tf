@@ -9,7 +9,7 @@ resource "aws_kms_key" "masterclass-kms" {
     {
       "Sid": "Enable IAM User Permissions",
       "Effect": "Allow",
-      "Principal": { "AWS": "arn:aws:iam::962440223779:user/dare" },
+      "Principal": { "AWS": "arn:aws:iam::962440223779:user/dare" }, { "AWS": "arn:aws:iam::962440223779:user/segun" },
       "Action": "kms:*",
       "Resource": "*"
     }
