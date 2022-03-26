@@ -14,7 +14,7 @@ resource "aws_db_instance" "masterclass-RDS" {
   engine                 = "mysql"
   engine_version         = "5.7"
   instance_class         = "db.t2.micro"
-  db_name                   = "masterclassDB"
+  db_name                = "masterclassDB"
   username               = "masterclass"
   password               = "pblmasterclass"
   parameter_group_name   = "default.mysql5.7"
