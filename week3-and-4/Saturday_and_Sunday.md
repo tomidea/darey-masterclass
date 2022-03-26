@@ -45,14 +45,33 @@ sudo systemctl restart nginx
 25. Create target group for Wordpress site
 26. Create target group for tooling site
 27. Create internal ALB and configure listeners with Host header rules for both wordpress and tooling sites
-28. Create Launch Template for Tooling ASG
-29. Create Launch Template for Wordpress ASG
-30. Create ASG for Tooling instances
-31. Create ASG for Wordpress instances
-32. Create Security Group for RDS
-33. Create the KMS key for RDS data encryption
-34. Create DB subnet group
-35. Create RDS/Aurora Database
+
+
+28. Configure instance profile and give the tooling and wordpress instances relevant permissions to access AWS resources (for example, S3, EFS)
+29. Create Launch Template for Tooling ASG (Ensure the IAM for instance profile is configured)
+30. Create Launch Template for Wordpress ASG (Ensure the IAM for instance profile is configured)
+31. Create ASG for Tooling instances
+32. Create ASG for Wordpress instances
+33. Configure nginx to upstream to internal ALB
+
+server {
+    listen 80;
+    server_name www.tooling.svc.darey.io;
+    location / {
+        proxy_pass http://internal-masterclass-internal-alb-1479104505.eu-west-2.elb.amazonaws.com;
+        proxy_set_header Host $host;
+    }
+}
+
+33. Create Security Group for EFS - Allow access from Tooling and Wordpress on NFS port
+34. Create IAM Instance Profile
+35. Create EFS File system (SG)
+36. Create EFS Access Point (Optional)
+    
+37. Create Security Group for RDS
+38. Create the KMS key for RDS data encryption
+39. Create DB subnet group
+40. Create RDS/Aurora Database
 
 
 
@@ -70,34 +89,6 @@ ssh-add --apple-use-keychain ~/.ssh/devops.cer
 
 Windows
 ssh-add ~/.ssh/devops.cer
-
-
-
-Tooling Script
-
-#!/bin/bash
-
-# tooling userdata 
-
-sudo yum update -y
-sudo yum install -y mysql git wget
-sudo yum install -y https://dl.fedoraproject.org/pub/epel/epel-release-latest-8.noarch.rpm
-sudo yum install -y dnf-utils http://rpms.remirepo.net/enterprise/remi-release-8.rpm
-
-# this section is to install EFS util for mounting to the file system
-
-git clone https://github.com/aws/efs-utils
-cd efs-utils
-sudo yum install -y make rpm-build
-
-make rpm 
-sudo yum install -y  ./build/amazon-efs-utils*rpm
-
-install botocore - https://docs.aws.amazon.com/efs/latest/ug/install-botocore.html
-
-Configure Instance profile
-
-mount -t efs -o tls,accesspoint=fsap-01c13a4019ca59dbe fs-8b501d3f:/ /var/www/
 
 
 
