@@ -10,7 +10,6 @@ resource "aws_vpc" "main" {
     Name            = "masterclass-VPC"
   }
 }
-
 # Create public subnets
 resource "aws_subnet" "PublicSubnet-1" {
   vpc_id                  = aws_vpc.main.id
@@ -149,7 +148,7 @@ resource "aws_route_table" "private-rtb" {
   vpc_id = aws_vpc.main.id
 
   tags = {
-    Name            = "p15-Private-Route-Table"
+    Name            = "masterclass-Private-Route-Table"
   }
 }
 
