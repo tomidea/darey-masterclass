@@ -24,10 +24,14 @@ locals {
         london = "51.5072° N, 0.1276° W"
         mumbai = "19.0760° N, 72.8777° E"
         texas = "31.9686° N, 99.9018° W"
-
     }
 
 }
+
+
+
+
+
 
 // upper(local.string1)
 // lower(local.cities.lagos)
