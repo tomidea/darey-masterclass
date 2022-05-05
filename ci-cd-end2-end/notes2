@@ -1,0 +1,152 @@
+1. Architectural diagram
+    -- Infrastructure setup 
+        -- AWS
+        -- Kubernetes
+    --- Environment setup 
+        -- Dev
+        -- dev-dare
+        -- dev-charles
+        -- QA
+        -- Preprod
+        -- Prod
+        -- Tooling
+    -- CI/CD
+        -- Docker
+        -- Helm
+        -- Terraform
+    -- DevOps Tooling
+        -- Docker
+        -- Kubernetes
+        -- Helm
+        -- Jenkins
+        -- Artifactory
+        -- Vault
+        -- Grafana/Prometheus
+        -- Elasticsearch
+
+    -- Business Application
+        -- Tooling
+        -- Microservices
+            -- frontend-ui 
+            -- Analytics 
+
+********************** Lets Begin ***********************
+1. Build the cloud infrastructure with Terraform 
+
+2. Connect to kubernetes and create the necessary environments 
+
+ (Tooling Cluster)
+-- kubectl create namespace tooling
+
+(Non Prod Cluster)
+-- kubectl create namespace dev 
+-- kubectl create namespace qa 
+
+ (Prod Cluster)
+-- kubectl create namespace preprod
+-- kubectl create namespace prod 
+
+
+3. Set the kubeconfig to the desired context 
+
+kubectl config set-context --current --namespace=tooling
+
+
+4. Deploy Business Applications in all environments -- starting from Dev 
+-- MySQL
+
+helm repo add bitnami https://charts.bitnami.com/bitnami
+
+helm upgrade -i mysql bitnami/mysql --version 8.9.0 -n tooling
+
+MYSQL_ROOT_PASSWORD=$(kubectl get secret --namespace dare my-mysql -o jsonpath="{.data.mysql-root-password}" | base64 --decode)
+echo ${MYSQL_ROOT_PASSWORD}
+
+# Create Database objects 
+kubectl exec -it my-mysql-0 -- mysql -h my-mysql.dare.svc.cluster.local -uroot -p"arAmUnBFFK"
+
+CREATE USER 'tooling'@'%' IDENTIFIED BY 'arAmUnBFFK';
+create database toolingdb;
+GRANT ALL PRIVILEGES ON *.* TO 'tooling'@'%';
+FLUSH PRIVILEGES;
+
+# Load Database Schema 
+kubectl exec -it my-mysql-0 -- mysql -h my-mysql.dare.svc.cluster.local -uroot -p"arAmUnBFFK" < app/tooling/html/tooling_db_schema.sql
+
+helm upgrade -i  tooling tooling  -f  tooling/values-overide.yaml 
+
+# Port Forward 
+kubectl port-forward svc/tooling 8080:80  
+
+
+
+5. Deploy Tooling applications 
+
+# Deploy Jenkins 
+
+helm repo add jenkinsci https://charts.jenkins.io/
+export jenkins_values=/Users/dare/Downloads/aws-project-darey/darey-masterclass/ci-cd-end2-end/infrastructure/helm-values/jenkins/jenkins-values.yaml
+helm upgrade -i jenkins jenkinsci/jenkins --version 3.11.10 -f $jenkins_values
+
+# Get Jenkins password 
+JENKINS_PASSWORD=`kubectl exec --namespace dare -it svc/jenkins -c jenkins -- /bin/cat /run/secrets/chart-admin-password && echo`
+kubectl port-forward svc/jenkins 8080:8080
+
+
+# Deploy ingress Controller
+
+# Deploy Cert-manager
+
+# Deploy  Clusterissuer
+
+certificate request --> order --> challenge --> confirm DNS is well configured --> Issue certificate
+
+# Configure DNS URLS (Route 53) --> Pointing to the nginx Ingress
+
+# Deploy Ingresses for any required applications
+
+# Connect application to Jenkins Job 
+    -- Install blueocean plugin 
+    -- connect github repo and create a multi-branch pipeline
+    -- Review Jenkins Configuration As Code (Jcasc)
+    -- Stages 
+        -- building the code 
+            -- Install the docker and docker pipeline jenkins plugin 
+            -- Update the Jenkinsfile to specify what docker image to use at each stage 
+        -- Tagging and pushing to artifactory 
+        -- Quality test 
+        -- Deploy through Helm to environments
+
+
+# Deploy Artifactory 
+
+1. Artifactory Pro
+   1. https://artifacthub.io/packages/helm/jfrog/artifactory
+   2. helm repo add jfrog https://charts.jfrog.io
+   3. helm repo update
+   4. helm create ns artifactory
+   5. helm upgrade --install artifactory --namespace artifactory jfrog/artifactory
+    ```
+              Release "artifactory" does not exist. Installing it now.
+              NAME: artifactory
+              LAST DEPLOYED: Sun Aug  1 14:58:26 2021
+              NAMESPACE: artifactory
+              STATUS: deployed
+              REVISION: 1
+              TEST SUITE: None
+              NOTES:
+              Congratulations. You have just deployed JFrog Artifactory!
+
+          1. Get the Artifactory URL by running these commands:
+
+            NOTE: It may take a few minutes for the LoadBalancer IP to be available.
+                  You can watch the status of the service by running 'kubectl get svc --namespace artifactory -w artifactory-artifactory-nginx'
+            export SERVICE_IP=$(kubectl get svc --namespace artifactory artifactory-artifactory-nginx -o jsonpath='{.status.loadBalancer.ingress[0].ip}')
+            echo http://$SERVICE_IP/
+
+          2. Open Artifactory in your browser
+            Default credential for Artifactory:
+            user: admin
+            password: password
+
+

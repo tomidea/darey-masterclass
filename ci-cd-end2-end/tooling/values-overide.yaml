@@ -1,0 +1,5 @@
+tooling:
+  mysql_ip: mysql.tooling.svc.cluster.local
+  mysql_user: tooling
+  mysql_pass: "arAmUnBFFK"
+  mysql_dbname: "toolingdb"

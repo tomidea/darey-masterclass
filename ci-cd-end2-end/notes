@@ -1,0 +1,302 @@
+1. Architectural diagram
+    -- Infrastructure setup 
+        -- AWS
+        -- Kubernetes
+    --- Environment setup 
+        -- Dev
+        -- QA
+        -- Preprod
+        -- Prod
+    -- CI/CD
+        -- Docker
+        -- Helm
+        -- Terraform
+    -- DevOps Tooling
+        -- Docker
+        -- Kubernetes
+        -- Helm
+        -- Jenkins
+        -- Artifactory
+        -- Vault
+        -- Grafana/Prometheus
+        -- Elasticsearch
+
+    -- Business Application
+        -- Tooling
+        -- Microservices
+
+
+kubectl config set-context --current --namespace=dare
+
+
+helm upgrade -i my-mysql bitnami/mysql --version 8.8.34 
+MYSQL_ROOT_PASSWORD=$(kubectl get secret --namespace dare my-mysql -o jsonpath="{.data.mysql-root-password}" | base64 --decode)
+echo ${MYSQL_ROOT_PASSWORD}
+
+# Create Database objects 
+kubectl exec -it my-mysql-0 -- mysql -h my-mysql.dare.svc.cluster.local -uroot -p"od2r847qGM"
+
+CREATE USER 'tooling'@'%' IDENTIFIED BY 'od2r847qGM';
+create database toolingdb;
+GRANT ALL PRIVILEGES ON *.* TO 'tooling'@'%';
+FLUSH PRIVILEGES;
+
+# Load Database Schema 
+kubectl exec -it my-mysql-0 -- mysql -h my-mysql.dare.svc.cluster.local -uroot -p"od2r847qGM" < app/tooling/html/tooling_db_schema.sql
+
+helm upgrade -i  tooling tooling  -f  tooling/values-overide.yaml 
+
+# Port Forward 
+kubectl port-forward svc/tooling 8080:80  
+
+
+# Deploy nginx Ingress
+
+
+# Deploy Cert-Manager 
+
+# Deploy Vault 
+
+
+User name,Password,Access key ID,Secret access key,Console login link
+dare2,rym^oqS|^iJOfB%,
+AKIA6AFPILQR2XI5BJXF,
+Lr3WfO1SFJlNDq0/2fDtwR/TE0EoSjEmdmsnob4j,
+https://962440223779.signin.aws.amazon.com/console
+
+- helm repo add hashicorp https://helm.releases.hashicorp.com
+- Install Vault 
+    ```
+
+    vault_values=/Users/dare/Downloads/aws-project-darey/darey-masterclass/ci-cd-end2-end/infrastructure/helm-values/vault-values-overide.yaml
+    vault_values=/Users/dare/Downloads/aws-project-darey/darey-masterclass/ci-cd-end2-end/infrastructure/helm-values/vault/vault/values.yaml
+    
+    helm upgrade -i vault hashicorp/vault -f $vault_values
+
+Review this for auto unseal - /Users/dare/Desktop/gitlab/darey.io/darey.io-PBL/pbl-expert/projects/project23/wip/vault/values.yaml
+
+vault operator init
+
+Recovery Key 1: +kescUriLYSmBL094cKwfqFnsLPBTk87h+CHV1UfoN/W
+Recovery Key 2: UZcpNXYfWNCkRR4N36K2yMlaYxcpJDhCtcWzZiqLqP3e
+Recovery Key 3: Piufpu62ONwmlK3tNG5K/79XABZXjo+GFiWJfQkT577f
+Recovery Key 4: b4zulMj0qnE+q4dV8e7OiS+RgmUZD9ZwObGFWI1OBxsa
+Recovery Key 5: RsOo82wrPB+5aVAQzr5+LDHs+npH2i80P+IDUJVaR0Fe
+
+Initial Root Token: s.4RDITxT3ioJD8QEwNUZ0i8mB
+
+vault operator unseal +kescUriLYSmBL094cKwfqFnsLPBTk87h+CHV1UfoN/W
+vault operator unseal RsOo82wrPB+5aVAQzr5+LDHs+npH2i80P+IDUJVaR0Fe
+vault operator unseal Piufpu62ONwmlK3tNG5K/79XABZXjo+GFiWJfQkT577f
+
+
+
+
+
+# Configure Vault 
+
+export VAULT_ADDR=http://localhost:8200
+export VAULT_TOKEN=s.4RDITxT3ioJD8QEwNUZ0i8mB
+
+1. Create vault service account 
+2. Create vault cluster role binding to bind with the  system:auth-delegator ClusterRole
+3. Enable secret engine in Vault 
+4. Create a policy in Vault 
+$ vault policy write tooling-app vault-policy.hcl
+
+5. Set environment variables 
+    # Set VAULT_SA_NAME to the service account created earlier
+    $ export VAULT_SA_NAME=$(kubectl get sa vault-auth -o jsonpath="{.secrets[*]['name']}")
+
+    # Set SA_JWT_TOKEN value to the service account JWT used to access the TokenReview API
+    $ export SA_JWT_TOKEN=$(kubectl get secret $VAULT_SA_NAME -o jsonpath="{.data.token}" | base64 --decode; echo)
+
+    # Set SA_CA_CRT to the PEM encoded CA cert used to talk to Kubernetes API
+    $ export SA_CA_CRT=$(kubectl get secret $VAULT_SA_NAME -o jsonpath="{.data['ca\.crt']}" | base64 --decode; echo)
+
+    # Look in your cloud provider console for this value
+    $ export K8S_HOST=https://4A1790A295472E9B45CF794453AE911F.gr7.eu-west-1.eks.amazonaws.com
+
+6. configure Vault’s Kubernetes auth method
+vault auth enable kubernetes
+
+7. Enable KV engine 
+vault secrets enable -version=2 kv
+
+8. Create the secrete from the UI 
+vault kv put secret/tooling/dev MYSQL_PASS=od2r847qGM
+
+9. 
+# Tell Vault how to communicate with the Kubernetes cluster
+
+-- Start the kube api server  through a proxy mapped to localhost 
+
+kubectl proxy --port=8087
+
+OIDC_ISSUER=$(curl --silent http://127.0.0.1:8087/api/v1/namespaces/default/serviceaccounts/default/token \
+  -H "Content-Type: application/json" \
+  -X POST \
+  -d '{"apiVersion": "authentication.k8s.io/v1", "kind": "TokenRequest"}' \
+  | jq -r '.status.token' \
+  | cut -d. -f2 \
+  | base64 -d | jq .iss)
+
+$ vault write auth/kubernetes/config \
+        token_reviewer_jwt="$SA_JWT_TOKEN" \
+        kubernetes_host="$K8S_HOST" \
+        kubernetes_ca_cert="$SA_CA_CRT"
+        issuer=$OIDC_ISSUER
+
+# Create a role named, 'tooling-app' to map Kubernetes Service Account to
+# Vault policies and default token TTL
+$ vault write auth/kubernetes/role/tooling-app \
+        bound_service_account_names=dare \
+        bound_service_account_namespaces='*' \
+        policies=tooling-app \
+        ttl=1440h
+
+
+
+
+
+
+
+
+
+
+
+KUBERNETES_PORT_443_TCP_ADDR='https://kubeapi.mgm-nprd.k8s.euroccp.com:6443'
+
+ 
+
+***Vault Role that will use the policy created above****
+
+vault write auth/kubernetes/role/eqd \
+
+        bound_service_account_names=vault-auth \
+
+        bound_service_account_namespaces=eqd-base-nprd \
+
+        policies=eqd \
+
+        ttl=24h
+
+ 
+
+export VAULT_ADDR='https://vault.mgm-nprd.k8s.euroccp.com'
+
+export VAULT_TOKEN='s.hFAHewVv2wUPxAKEyGRBRkY7'
+
+ 
+
+vault write auth/kubernetes/config \
+
+        token_reviewer_jwt="$SA_JWT_TOKEN" \
+
+        kubernetes_host=https://$KUBERNETES_PORT_443_TCP_ADDR \
+
+        kubernetes_ca_cert="$SA_CA_CRT"
+
+ 
+
+***Policy to allow access to a secret path****
+
+ 
+
+vault policy write eqd - <<EQD
+
+path "eqd/environments" {
+
+  capabilities = ["read"]
+
+}
+
+EQD
+
+ 
+
+ 
+
+***************************************
+
+# Set VAULT_SA_NAME to the service account you created earlier
+
+export VAULT_SA_NAME=$(kubectl -n eqd-base-olufunmilayod get sa vault-auth -o jsonpath="{.secrets[*]['name']}")
+
+ 
+
+# Set SA_JWT_TOKEN value to the service account JWT used to access the TokenReview API
+
+export SA_JWT_TOKEN=$(kubectl -n eqd-base-olufunmilayod get secret $VAULT_SA_NAME -o jsonpath="{.data.token}" | base64 --decode; echo)
+
+ 
+
+# Set SA_CA_CRT to the PEM encoded CA cert used to talk to Kubernetes API
+
+export SA_CA_CRT=$(kubectl -n eqd-base-olufunmilayod get secret $VAULT_SA_NAME -o jsonpath="{.data['ca\.crt']}" | base64 --decode; echo)
+
+ 
+
+vault auth enable kubernetes
+
+ 
+
+KUBERNETES_PORT_443_TCP_ADDR='https://kubeapi.mgm-nprd.k8s.euroccp.com:6443'
+
+KUBE_HOST=$(kubectl config view --raw --minify --flatten --output='jsonpath={.clusters[].cluster.server}')
+
+KUBE_PORT=6443
+
+KUBERNETES_PORT_443_TCP_ADDR=$KUBE_HOST:$KUBE_PORT
+
+ 
+
+vault write auth/kubernetes/config \
+
+                issuer=https://kubernetes.default.svc.cluster.local \
+
+        token_reviewer_jwt="$SA_JWT_TOKEN" \
+
+        kubernetes_host=https://$KUBERNETES_PORT_443_TCP_ADDR \
+
+        kubernetes_ca_cert="$SA_CA_CRT"
+
+ 
+
+ 
+
+vault write auth/kubernetes/role/eqd-olufunmilayo \
+
+        bound_service_account_names=vault-auth \
+
+        bound_service_account_namespaces=eqd-base-olufunmilayod \
+
+        policies=eqd \
+
+        ttl=24h
+
+ 
+
+
+
+# Deploy Jenkins 
+
+helm repo add jenkinsci https://charts.jenkins.io/
+export jenkins_values=/Users/dare/Downloads/aws-project-darey/darey-masterclass/ci-cd-end2-end/infrastructure/helm-values/jenkins/jenkins-values.yaml
+helm upgrade -i jenkins jenkinsci/jenkins --version 3.11.10 -f $jenkins_values
+
+# Get Jenkins password 
+JENKINS_PASSWORD=`kubectl exec --namespace dare -it svc/jenkins -c jenkins -- /bin/cat /run/secrets/chart-admin-password && echo`
+kubectl port-forward svc/jenkins 8080:8080
+
+# Configure Cert-Manager 
+
+# Configure DNS 
+
+# Connect application to Jenkins Job 
+    -- Create a Jenkins Credential 
+        -- Install Github Plugin
+        -- Create Github personal Token - https://github.com/settings/tokens
+    -- Review Jenkins Configuration As Code (Jcasc)
+
+

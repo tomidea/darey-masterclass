@@ -1,0 +1,20 @@
+global:
+  standalone:
+    config: |
+      ui = true
+
+      listener "tcp" {
+        tls_disable = 1
+        address = "[::]:8200"
+        cluster_address = "[::]:8201"
+      }
+      storage "file" {
+        path = "/vault/data"
+      }
+      
+      seal "awskms" {
+      region     = "eu-west-1"
+      kms_key_id = "2f95aa06-2b92-4708-b222-428701053c37"
+      }
+  ui:
+    enabled: true

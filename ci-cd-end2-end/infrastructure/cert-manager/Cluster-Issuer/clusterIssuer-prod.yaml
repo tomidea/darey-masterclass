@@ -1,0 +1,23 @@
+apiVersion: cert-manager.io/v1
+kind: ClusterIssuer
+metadata:
+  namespace: "cert-manager"
+  name: "letsencrypt-prod"
+spec:
+  acme:
+    # The ACME server URL
+    server: "https://acme-v02.api.letsencrypt.org/directory"
+    email: "infradev@devops-masterclass.link"
+    # Name of a secret used to store the ACME account private key
+    privateKeySecretRef:
+      name: "letsencrypt-prod"
+    solvers:
+    - selector:
+        dnsZones:
+          - "devops-masterclass.link"
+      dns01:
+        route53:
+          region: "eu-west-1"
+          hostedZoneID: "Z0589547QI14UKK4D6L8"
+
+
