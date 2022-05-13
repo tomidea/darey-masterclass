@@ -1,0 +1,10 @@
+-- Containers' notes 
+-- Show the architecture of what we are building next 
+-- Build docker image
+-- run docker container for tooling website
+-- run public container for mysql
+-- connect them together and talk about the limitations that lead to Docker compose 
+-- Show docker compose 
+-- show kubernetes minikube 
+-- talk about kubernetes architecture 
+-- update terraform to deploy EKS 
